@@ -31,6 +31,12 @@ if resume_file and jd_text:
     jd_text = jd_text.lower()
 
     matched_skills, missing_skills = match_skills(resume_text, jd_text, skills)
+    total_required = len([s for s in skills if s in jd_text])
+    match_percent = int((len(matched_skills) / total_required) * 100) if total_required else 0
+
+    st.markdown(f"## 🎯 Match Score: **{match_percent}%**")
+
+    
 
     st.markdown("## ✅ Matched Skills")
     st.write(matched_skills if matched_skills else "No matched skills found")
