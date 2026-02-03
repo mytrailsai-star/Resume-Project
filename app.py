@@ -1,5 +1,6 @@
 import streamlit as st
 import fitz  # PyMuPDF
+import pandas as pd
 
 # --------- Helpers ---------
 def extract_text_from_pdf(pdf_file):
@@ -23,23 +24,34 @@ skills = [
     "nlp", "flask", "streamlit", "pandas", "numpy"
 ]
 
-resume_file = st.file_uploader("Upload Resume (PDF)", type=["pdf"])
+resume_files = st.file_uploader(
+    "Upload Resumes (PDFs)",
+    type=["pdf"],
+    accept_multiple_files=True
+)
+
 jd_text = st.text_area("Paste Job Description", height=200)
 
-if resume_file and jd_text:
-    resume_text = extract_text_from_pdf(resume_file)
+if resume_files and jd_text:
     jd_text = jd_text.lower()
+    results = []
 
-    matched_skills, missing_skills = match_skills(resume_text, jd_text, skills)
-    total_required = len([s for s in skills if s in jd_text])
-    match_percent = int((len(matched_skills) / total_required) * 100) if total_required else 0
+    for resume in resume_files:
+        resume_text = extract_text_from_pdf(resume)
+        matched, missing = match_skills(resume_text, jd_text, skills)
 
-    st.markdown(f"## 🎯 Match Score: **{match_percent}%**")
+        total_required = len([s for s in skills if s in jd_text])
+        score = int((len(matched) / total_required) * 100) if total_required else 0
 
-    
+        results.append({
+            "Resume": resume.name,
+            "Match %": score,
+            "Matched Skills": ", ".join(matched),
+            "Missing Skills": ", ".join(missing)
+        })
 
-    st.markdown("## ✅ Matched Skills")
-    st.write(matched_skills if matched_skills else "No matched skills found")
+    df = pd.DataFrame(results).sort_values(by="Match %", ascending=False)
 
-    st.markdown("## ❌ Missing Skills")
-    st.write(missing_skills if missing_skills else "No missing skills 🎉")
+    st.markdown("## 📊 Resume Ranking")
+    st.dataframe(df, use_container_width=True)
+
