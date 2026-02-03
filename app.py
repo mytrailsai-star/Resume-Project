@@ -1,42 +1,37 @@
 import streamlit as st
 import fitz  # PyMuPDF
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, util
 import numpy as np
 
+st.set_page_config(page_title="Resume–JD Matcher", layout="wide")
 
-@app.route("/", methods=["GET", "POST"])
-def index():
-    score = None
-    results = []
-    matched_skills = []
-    missing_skills = []
+st.title("📄 Resume – Job Description Matcher")
 
-    if request.method == "POST":
-        jd_text = request.form["jd"]
-        files = request.files.getlist("resumes")
+st.write("Upload resumes and paste a Job Description to see match score, matched skills, and missing skills.")
 
-        for file in files:
-            resume_text = read_pdf(file)
-            score = calculate_match(resume_text, jd_text)
-            skill_result = compare_skills(jd_text, resume_text)
+jd_text = st.text_area("Paste Job Description here")
 
-            results.append({
-                "name": file.filename,
-                "score": score
-            })
+uploaded_files = st.file_uploader(
+    "Upload Resume PDFs",
+    type=["pdf"],
+    accept_multiple_files=True
+)
 
-            matched_skills = skill_result["matched_skills"]
-            missing_skills = skill_result["missing_skills"]
+if st.button("Match Resumes") and jd_text and uploaded_files:
+    st.info("Processing resumes...")
 
-        results = sorted(results, key=lambda x: x["score"], reverse=True)
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    jd_embedding = model.encode(jd_text, convert_to_tensor=True)
 
-    return render_template(
-        "index.html",
-        score=score,
-        results=results,
-        matched_skills=matched_skills,
-        missing_skills=missing_skills
-    )
+    for file in uploaded_files:
+        with fitz.open(stream=file.read(), filetype="pdf") as doc:
+            resume_text = ""
+            for page in doc:
+                resume_text += page.get_text()
 
-if __name__ == "__main__":
-    app.run(debug=True)
+        resume_embedding = model.encode(resume_text, convert_to_tensor=True)
+        score = util.cos_sim(jd_embedding, resume_embedding).item()
+
+        st.subheader(file.name)
+        st.write(f"✅ Match Score: **{score:.2f}**")
+
