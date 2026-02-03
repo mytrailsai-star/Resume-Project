@@ -3,10 +3,6 @@ import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
 import numpy as np
 
-from flask import Flask, render_template, request
-from matcher import calculate_match, read_pdf, compare_skills
-
-app = Flask(__name__)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
