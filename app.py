@@ -1,4 +1,8 @@
+from matcher import get_match_score
+
 import streamlit as st
+from skills import extract_skills
+
 
 st.set_page_config(
     page_title="Resume–JD Matcher",
