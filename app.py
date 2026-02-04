@@ -1,3 +1,5 @@
+from skills import SKILLS
+
 import streamlit as st
 import fitz  # PyMuPDF
 import pandas as pd
@@ -10,16 +12,16 @@ def extract_text_from_pdf(pdf_file):
             text += page.get_text()
     return text.lower()
 
-def match_skills(resume_text, jd_text, skills):
-    matched = [s for s in skills if s in resume_text and s in jd_text]
-    missing = [s for s in skills if s in jd_text and s not in resume_text]
+def match_SKILLS(resume_text, jd_text, SKILLS):
+    matched = [s for s in SKILLS if s in resume_text and s in jd_text]
+    missing = [s for s in SKILLS if s in jd_text and s not in resume_text]
     return matched, missing
 
 # --------- UI ---------
 st.set_page_config(page_title="Resume–JD Matcher", layout="wide")
 st.title("📄 Resume–Job Description Matcher")
 
-skills = [
+SKILLS = [
     "python", "java", "sql", "machine learning", "deep learning",
     "nlp", "flask", "streamlit", "pandas", "numpy"
 ]
@@ -38,16 +40,16 @@ if resume_files and jd_text:
 
     for resume in resume_files:
         resume_text = extract_text_from_pdf(resume)
-        matched, missing = match_skills(resume_text, jd_text, skills)
+        matched, missing = match_SKILLS(resume_text, jd_text, SKILLS)
 
-        total_required = len([s for s in skills if s in jd_text])
+        total_required = len([s for s in SKILLS if s in jd_text])
         score = int((len(matched) / total_required) * 100) if total_required else 0
 
         results.append({
             "Resume": resume.name,
             "Match %": score,
-            "Matched Skills": ", ".join(matched),
-            "Missing Skills": ", ".join(missing)
+            "Matched SKILLS": ", ".join(matched),
+            "Missing SKILLS": ", ".join(missing)
         })
 
     df = pd.DataFrame(results).sort_values(by="Match %", ascending=False)
