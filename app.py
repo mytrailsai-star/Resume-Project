@@ -1,59 +1,66 @@
-from skills import SKILLS
-
 import streamlit as st
-import fitz  # PyMuPDF
-import pandas as pd
 
-# --------- Helpers ---------
-def extract_text_from_pdf(pdf_file):
-    text = ""
-    with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
-        for page in doc:
-            text += page.get_text()
-    return text.lower()
-
-def match_SKILLS(resume_text, jd_text, SKILLS):
-    matched = [s for s in SKILLS if s in resume_text and s in jd_text]
-    missing = [s for s in SKILLS if s in jd_text and s not in resume_text]
-    return matched, missing
-
-# --------- UI ---------
-st.set_page_config(page_title="Resume–JD Matcher", layout="wide")
-st.title("📄 Resume–Job Description Matcher")
-
-SKILLS = [
-    "python", "java", "sql", "machine learning", "deep learning",
-    "nlp", "flask", "streamlit", "pandas", "numpy"
-]
-
-resume_files = st.file_uploader(
-    "Upload Resumes (PDFs)",
-    type=["pdf"],
-    accept_multiple_files=True
+st.set_page_config(
+    page_title="Resume–JD Matcher",
+    layout="wide"
 )
 
-jd_text = st.text_area("Paste Job Description", height=200)
+st.title("📄 Resume ↔ Job Description Matcher")
+st.caption("AI-powered resume screening using NLP & embeddings")
 
-if resume_files and jd_text:
-    jd_text = jd_text.lower()
-    results = []
+# --- INPUT SECTION ---
+col1, col2 = st.columns(2)
 
-    for resume in resume_files:
-        resume_text = extract_text_from_pdf(resume)
-        matched, missing = match_SKILLS(resume_text, jd_text, SKILLS)
+with col1:
+    st.subheader("🧑‍💼 Resume Text")
+    resume_text = st.text_area(
+        "Paste resume content here",
+        height=300,
+        placeholder="Paste resume text..."
+    )
 
-        total_required = len([s for s in SKILLS if s in jd_text])
-        score = int((len(matched) / total_required) * 100) if total_required else 0
+with col2:
+    st.subheader("📌 Job Description")
+    jd_text = st.text_area(
+        "Paste job description here",
+        height=300,
+        placeholder="Paste job description text..."
+    )
 
-        results.append({
-            "Resume": resume.name,
-            "Match %": score,
-            "Matched SKILLS": ", ".join(matched),
-            "Missing SKILLS": ", ".join(missing)
-        })
+st.divider()
 
-    df = pd.DataFrame(results).sort_values(by="Match %", ascending=False)
+# --- ACTION ---
+if st.button("🔍 Analyze Match", use_container_width=True):
+    if resume_text and jd_text:
 
-    st.markdown("## 📊 Resume Ranking")
-    st.dataframe(df, use_container_width=True)
+        with st.spinner("Analyzing resume against JD..."):
+            match_score = get_match_score(resume_text, jd_text)
+            matched_skills, missing_skills = extract_skills(resume_text, jd_text)
+
+        st.success("Analysis complete!")
+
+        # --- SCORE ---
+        st.subheader("📊 Match Score")
+        st.progress(match_score / 100)
+        st.metric("Overall Match", f"{match_score:.2f}%")
+
+        # --- SKILLS ---
+        col3, col4 = st.columns(2)
+
+        with col3:
+            st.subheader("✅ Matched Skills")
+            if matched_skills:
+                st.write(", ".join(matched_skills))
+            else:
+                st.info("No matched skills found")
+
+        with col4:
+            st.subheader("❌ Missing Skills")
+            if missing_skills:
+                st.write(", ".join(missing_skills))
+            else:
+                st.success("No missing skills 🎉")
+
+    else:
+        st.warning("Please paste both Resume and Job Description.")
 
