@@ -67,3 +67,14 @@ You can try the application here:
 2. Paste a Job Description
 3. The app ranks resumes by match percentage
 4. Shows matched and missing skills for each resume
+## 📸 Screenshots
+
+### Home – Upload Resumes & Job Description
+![Home Screen]("C:\Users\Jaija\Pictures\Screenshots\Screenshot 2026-02-04 115356.png")
+
+### Resume Ranking
+![Resume Ranking]("C:\Users\Jaija\Pictures\Screenshots\Screenshot 2026-02-04 115305.png")
+
+### Skill Match Analysis
+![Skill Matching]("C:\Users\Jaija\Pictures\Screenshots\Screenshot 2026-02-04 115253.png")
+
