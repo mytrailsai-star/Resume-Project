@@ -55,3 +55,15 @@ Pull requests are welcome. For major changes, please open an issue first.
 
 📄 License
 This project is for educational and research purposes.
+---
+## 🚀 Live Demo
+
+You can try the application here:
+
+🔗 https://resume-project-mtet6vwn8uxvsvxjkampsm.streamlit.app/
+
+### How it works
+1. Upload one or more resume PDFs
+2. Paste a Job Description
+3. The app ranks resumes by match percentage
+4. Shows matched and missing skills for each resume
