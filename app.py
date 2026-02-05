@@ -1,96 +1,50 @@
-import streamlit as st
-from matcher import get_match_score
-from skills import extract_skills
+from flask import Flask, render_template, request
+from matcher import calculate_match, read_pdf, compare_skills
 
-# ---------------- PAGE CONFIG ----------------
-st.set_page_config(
-    page_title="Resume–JD Matcher",
-    layout="wide"
-)
+app = Flask(__name__)
 
-st.title("📄 Resume ↔ Job Description Matcher")
-st.caption("AI-powered resume screening using NLP & Transformer embeddings")
+@app.route("/", methods=["GET", "POST"])
+def index():
+    rankings = []
+    skills_result = None
 
-# ---------------- HELPER FUNCTION ----------------
-def render_skill_tags(skills, color):
-    if not skills:
-        return
+    if request.method == "POST":
+        jd_text = request.form.get("jd", "").strip()
+        files = request.files.getlist("resumes")
 
-    tags_html = ""
-    for skill in skills:
-        tags_html += f"""
-        <span style="
-            display:inline-block;
-            padding:6px 12px;
-            margin:4px;
-            border-radius:20px;
-            background-color:{color};
-            color:white;
-            font-size:14px;
-        ">
-            {skill}
-        </span>
-        """
+        if jd_text and files:
+            resume_texts = []
 
-    st.markdown(tags_html, unsafe_allow_html=True)
+            for file in files:
+                resume_text = read_pdf(file)
+                resume_texts.append((file.filename, resume_text))
 
-# ---------------- INPUT SECTION ----------------
-col1, col2 = st.columns(2)
+                score = calculate_match(resume_text, jd_text)
+                rankings.append({
+                    "name": file.filename,
+                    "score": round(score, 2)
+                })
 
-with col1:
-    st.subheader("🧑‍💼 Resume Text")
-    resume_text = st.text_area(
-        "Paste resume content here",
-        height=300,
-        placeholder="Paste resume text..."
+            # Sort resumes by match score
+            rankings.sort(key=lambda x: x["score"], reverse=True)
+
+            # Compare skills ONLY for top-ranked resume
+            top_resume_text = resume_texts[0][1]
+            skills_result = compare_skills(jd_text, top_resume_text)
+
+    return render_template(
+        "index.html",
+        rankings=rankings,
+        skills=skills_result
     )
 
-with col2:
-    st.subheader("📌 Job Description")
-    jd_text = st.text_area(
-        "Paste job description here",
-        height=300,
-        placeholder="Paste job description text..."
-    )
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
 
-st.divider()
 
-# ---------------- ACTION SECTION ----------------
-if st.button("🔍 Analyze Match", use_container_width=True):
 
-    if resume_text.strip() and jd_text.strip():
+    
+    
 
-        with st.spinner("Analyzing resume against job description..."):
-            match_score = get_match_score(resume_text, jd_text)
-            matched_skills, missing_skills = extract_skills(resume_text, jd_text)
-
-        st.success("Analysis complete!")
-
-        # ---------------- MATCH SCORE ----------------
-        st.subheader("📊 Match Score")
-        st.progress(match_score / 100)
-        st.metric("Overall Resume–JD Match", f"{match_score:.2f}%")
-
-        st.divider()
-
-        # ---------------- SKILLS SECTION ----------------
-        col3, col4 = st.columns(2)
-
-        with col3:
-            st.subheader("✅ Matched Skills")
-            if matched_skills:
-                render_skill_tags(matched_skills, "#2ecc71")  # green
-            else:
-                st.info("No matched skills found")
-
-        with col4:
-            st.subheader("❌ Missing Skills")
-            if missing_skills:
-                render_skill_tags(missing_skills, "#e74c3c")  # red
-            else:
-                st.success("No missing skills 🎉")
-
-    else:
-        st.warning("Please paste both Resume and Job Description text.")
 
   

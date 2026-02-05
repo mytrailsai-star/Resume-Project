@@ -1,15 +1,44 @@
-from sentence_transformers import SentenceTransformer, util
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import PyPDF2
+import re
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# ---------- PDF READER ----------
+def read_pdf(file):
+    reader = PyPDF2.PdfReader(file)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text() or ""
+    return clean_text(text)
 
+# ---------- TEXT CLEANER ----------
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    return text
 
-def get_match_score(resume_text, jd_text):
-    if not resume_text or not jd_text:
-        return 0.0
+# ---------- MATCH SCORE ----------
+def calculate_match(resume_text, jd_text):
+    vectorizer = TfidfVectorizer(stop_words="english")
+    vectors = vectorizer.fit_transform([resume_text, jd_text])
+    score = cosine_similarity(vectors[0:1], vectors[1:2])[0][0]
+    return round(score * 100, 2)
 
-    resume_embedding = model.encode(resume_text, convert_to_tensor=True)
-    jd_embedding = model.encode(jd_text, convert_to_tensor=True)
+# ---------- SKILL COMPARISON ----------
+def compare_skills(jd_text, resume_text):
+    skills = [
+        "python", "sql", "machine learning", "deep learning",
+        "nlp", "data analysis", "pandas", "numpy", "scikit-learn",
+        "flask", "streamlit", "git", "docker", "api", "aws"
+    ]
 
-    similarity = util.cos_sim(resume_embedding, jd_embedding).item()
-    return round(max(0, similarity) * 100, 2)
+    jd_words = jd_text.lower()
+    resume_words = resume_text.lower()
 
+    matched = [s for s in skills if s in resume_words and s in jd_words]
+    missing = [s for s in skills if s in jd_words and s not in resume_words]
+
+    return {
+        "matched": matched,
+        "missing": missing
+    }
