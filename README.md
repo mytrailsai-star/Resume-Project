@@ -78,3 +78,23 @@ You can try the application here:
 ### Skill Match Analysis
 ![Skill Matching]("C:\Users\Jaija\Pictures\Screenshots\Screenshot 2026-02-04 115253.png")
 
+## 🔍 AI Resume Ranking System
+
+### 🚀 Live Demos
+- Streamlit App: <your streamlit link>
+- Flask App (Render): <your render link>
+
+### 🧠 Features
+- Resume–JD match scoring
+- Skill extraction & gap analysis
+- Resume ranking
+- PDF resume parsing
+- Transformer-based semantic matching
+
+### 🛠 Tech Stack
+Python, Flask, Streamlit, Sentence Transformers, NLP, PDF Processing
+
+### 📸 Screenshots
+![Home](screenshots/home.png)
+![Ranking](screenshots/ranking.png)
+![Skills](screenshots/skills.png)
